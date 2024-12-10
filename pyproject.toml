@@ -1,0 +1,24 @@
+[project]
+name = "zdbcon"
+version = "0.0.1"
+dependencies = [
+  "pyodbc",
+  "pandas",
+  "icecream",
+  "zenpy",
+]
+authors = [
+  { name="Rodrigo Morais", email="rodrigohmorais@proton.me" },
+]
+description = "ZenPy wrapper that can connect to and append ticket data into a SQL database."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/rodigu/zendesk-db-connector"
+Issues = "https://github.com/rodigu/zendesk-db-connector/issues"
