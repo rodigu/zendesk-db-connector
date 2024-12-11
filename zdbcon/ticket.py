@@ -1,17 +1,15 @@
 import pandas as pd
-import json
 from zdbcon.zp import Zendesk
 from zenpy.lib.api_objects import Ticket, TicketField
 
 class ZenTicket(Zendesk):
-    def __init__(self, cred_json='./auth/zendesk.json'):
+    def __init__(self, credentials: dict[str, str], mapping_dict: dict[str, dict[str, str]]):
         """Zendesk API integration for individual tickets
 
-        :param str cred_json: zendesk API credentials, defaults to './auth/zendesk.json'
+        :param dict[str, str] credentials: Zendesk API credentials
         """
-        super().__init__('Tickets', cred_json=cred_json)
+        super().__init__('Tickets', credentials=credentials, type_mapping=mapping_dict)
         self.ticket_fields = { str(f.id): f for f in self.client.ticket_fields() }
-        self.mapping_dict = None
 
     def ticket_dict(self, ticket: Ticket) -> dict:
         d: dict = ticket.to_dict()
