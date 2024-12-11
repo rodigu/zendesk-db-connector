@@ -240,40 +240,62 @@ class Zendesk:
         return { f['id']:f['value'] for f in dlist }
     
     def vp(self, txt: str):
-        if self.VERBOSE: print(txt, flush=True)
+        """Verbose print.
+        Only prints if `self.VERBOSE` is `True`
 
-    def commit(self):
+        :param str txt: text to be passed onto `ic`
+        """
+        if self.VERBOSE: ic(txt, flush=True)
+
+    def commit(self, tries=10):
+        """Wrapper for pyodbc `Connection.commit`
+
+        While unsuccessful:
+        - reconnects to the database
+        - retries `tries` number of times.
+
+        :param int tries: number of times to retry the commit, defaults to 10
+        """
         try:
             self.db.commit()
         except db.Error as pe:
-            print(f"Error: {pe}")
-            print('Retrying commit')
+            self.vp(f"Error: {pe}")
+            self.vp('Retrying commit')
             try:
                 self.reconnect()
-                self.commit()
+                self.commit(tries - 1)
             except:
-                print("Couldn't reconnect")
+                self.vp("Couldn't reconnect")
 
     def execute(self, sql_query: str, tries=10, is_first=True):
+        """Executes the given SQL query.
+
+        Returns result of query includes a `SELECT`.
+
+        :param str sql_query: SQL query
+        :param int tries: number of times to retry, defaults to 10
+        :param bool is_first: used by the recursion algorithm to determine first run, defaults to True
+        :return list|None: same return as `Connection.execute`
+        """
         self.vp('> Executing SQL query')
 
         if tries==0:
-            print(">   Couldn't execute query:")
-            print(sql_query)
+            self.vp(">   Couldn't execute query:")
+            self.vp(sql_query)
             return
 
         try:
             r = self.db.execute(sql_query)
             if not is_first:
-                print(">   Execute successful")
+                self.vp(">   Execute successful")
             return r
         except db.Error as pe:
-            print(f">   Error: {pe}")
+            self.vp(f">   Error: {pe}")
             try:
-                print(f'>   Retrying execute ({tries} attempts left)')
+                self.vp(f'>   Retrying execute ({tries} attempts left)')
                 return self.execute(sql_query, tries - 1, False)
             except:
-                print(">   Couldn't execute")
+                self.vp(">   Couldn't execute")
                 return
 
     def map_type(self, column: str, pd_type: str) -> str:
@@ -311,10 +333,10 @@ class Zendesk:
         """
         id=obj_dict['id']
         if id in self.get_table_ids(recache):
-            self.vp(f"\t\t> {obj_dict['id']} already in table")
+            self.vp(f"{obj_dict['id']} already in table")
             if not force:
                 return False
-            self.vp("\t\t>   Appending object anyway")
+            self.vp("Appending object anyway")
 
         type_list = self.type_list(obj_dict)
 
