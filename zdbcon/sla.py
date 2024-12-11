@@ -2,12 +2,12 @@ from zdbcon.audit import ZenAudit
 from zenpy.lib.api_objects import Audit
 
 class ZenSLA(ZenAudit):
-    def __init__(self, cred_json='./auth/zendesk.json'):
+    def __init__(self, credentials: dict[str, str]):
         """Zendesk SLA integration
 
-        :param str cred_json: zendesk API credentials JSON, defaults to './auth/zendesk.json'
+        :param str credentials: Zendesk API credentials dictionary
         """
-        super().__init__(cred_json=cred_json)
+        super().__init__(credentials=credentials)
         self.table = "SLAAudit"
 
     @staticmethod
