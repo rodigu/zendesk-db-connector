@@ -3,7 +3,6 @@ import pandas as pd
 from zenpy.lib.response import GenericCursorResultsGenerator
 from zenpy.lib.api_objects import Audit
 from zenpy.lib.proxy import ProxyDict
-import json
 
 class ZenAudit(Zendesk):
     """Pipeline for audit metadata.
@@ -14,8 +13,8 @@ class ZenAudit(Zendesk):
 
     :param Zendesk: Zendesk parent class
     """
-    def __init__(self, cred_json='./auth/zendesk.json', type_mapping='./ref/type_mapping.json'):
-        super().__init__(table='Audits', cred_json=cred_json, type_mapping=type_mapping)
+    def __init__(self, credentials: dict[str, str], type_mapping: dict[str, dict[str, str]]):
+        super().__init__(table='Audits', credentials=credentials, type_mapping=type_mapping)
 
     def get_ticket_audits(self, id: int) -> GenericCursorResultsGenerator[Audit]:
         """Generator for ticket audits
