@@ -1,4 +1,3 @@
-import json
 import pyodbc as db
 import pandas as pd
 from dateutil import parser as date_parser
@@ -6,6 +5,7 @@ from dateutil import tz
 from zenpy import Zenpy
 from zenpy.lib.api_objects import Ticket
 from datetime import datetime
+from icecream import ic
 
 class Zendesk:
     PandasTypeMap = {
@@ -14,15 +14,64 @@ class Zendesk:
         "bool": "bit",
     }
 
-    def __init__(self, table: str, cred_json='../auth/zendesk.json', type_mapping='./ref/type_mapping.json'):
-        """Zendesk data transformer instantiator.
-        
-        :param str cred_json: `json` file with the credentials, defaults to '../auth/zendesk.json'
+    def __init__(self, table: str, credentials: dict[str, str], type_mapping: dict[str, dict[str,str]]={}):
+        """Zenpy wrapper that connects the API to a pyodbc SQL Database
+
+        Example `credentials` for Zendesk:
+
+        ```json
+        {
+            "email": EMAIL,
+            "token": API_TOKEN,
+            "subdomain": SUBDOMAIN
+        }
+        ```
+
+        Example `type_mapping`:
+
+        ```json
+        {
+            "direct": {
+                "int64": "bigint",
+                "object": "varchar(max)",
+                "bool": "bit",
+                "text": "varchar(max)",
+                "integer": "bigint",
+                "tagger": "varchar(max)",
+                "checkbox": "bit",
+                "date": "datetime",
+                "float64": "decimal"
+            },
+            "except": {
+                "25195420522772": "int",
+                "28904987445396": "int",
+                "29276570401556": "int",
+                "29276198281492": "int",
+                "29276105521044": "int",
+                "29276100335508": "int",
+                "20947766232980": "int",
+                "20947745134356": "int",
+                "20789097773204": "int",
+                "28083771248020": "varchar(max)",
+                "metadata.system.latitude": "decimal(10,6)",
+                "metadata.system.longitude": "decimal(10,6)"
+            },
+            "date_fields": [
+                "created_at",
+                "due_at",
+                "updated_at",
+                "content.original_message.source.original_message_timestamp",
+                "content.original_message.received"
+            ]
+        }
+        ```
+
+        :param str table: _description_
+        :param dict[str, str] credentials: _description_
+        :param dict[str, dict[str,str]] type_mapping: _description_, defaults to {}
         """
-        with open(cred_json) as cred_file:
-            self.connect_zendesk(json.load(cred_file))
-        with open(type_mapping) as cred_file:
-            self.mapping_dict: dict = json.load(cred_file)
+        self.connect_zendesk(credentials)
+        self.mapping_dict: dict = type_mapping
 
         self.table = table
         self.table_columns: set[str] = set()
@@ -30,7 +79,9 @@ class Zendesk:
         self.id_cache = None
 
     def reconnect(self):
-        self.connect_db(self.db_file)
+        """Attempts to reconnect to the database and to Zendesk
+        """
+        self.connect_db(self.db_credentials)
         self.connect_zendesk(self.credentials)
 
     def type_list(self, obj_dict: dict) -> list[dict[str, any]]:
@@ -41,11 +92,20 @@ class Zendesk:
         """
         df = pd.json_normalize(obj_dict)
         pd_types = df.dtypes.to_dict()
-        return [{'column': key, 'value': val, 'type': self.map_type(key, str(pd_types[key]))} for key, val in df.iloc[0].to_dict().items() if val is not None]
+        return [
+            {
+                'column': key,
+                'value': val,
+                'type': self.map_type(key, str(pd_types[key]))
+            }
+            for key, val in df.iloc[0].to_dict().items()
+                if val is not None
+        ]
 
     @staticmethod
     def flatten_dict(d: dict, key: str|list[str]) -> dict:
-        """Recusively flattens a dict.
+        """Recusively flattens a dictionary (dictionaries inside of dictionaries are also flattened).
+
         Lists with dictionaries are turned into dicts with keys using `key`.
 
         If `key` is a list, it attempts to use each item from the list in order as a key.
@@ -65,17 +125,23 @@ class Zendesk:
         :return dict: flattened dictionary
         """
         wrong_type = lambda x: type(x)!=list and type(x)!=dict
+
         if wrong_type(dlist) or (type(dlist)==list and len(dlist) > 0 and wrong_type(dlist[0])):
             return dlist
+
         if type(dlist)==dict:
             return Zendesk.flatten_dict(dlist, key)
+
         def choose_key(d: dict) -> str:
             if type(key)==str: return key
             for k in key:
                 if k in d: return k
+
         flattened = { d[choose_key(d)]: Zendesk.flatten_dict_list(d, key) for d in dlist }
+
         for v in flattened.values():
             v.pop(choose_key(v))
+
         return flattened
 
     def connect_zendesk(self, credentials: dict[str, str]):
@@ -84,7 +150,7 @@ class Zendesk:
 
         See http://docs.facetoe.com.au/zenpy.html
         
-        Suggested API credentials format:
+        API credentials format:
 
         ```json
         {
@@ -96,17 +162,17 @@ class Zendesk:
 
         Note: password connection to the Zendesk API has been deprecated.
 
-        :param str credentials: `json` file with the Zendedsk API credentials
+        :param dict[str, str] credentials: JSON string with Zendesk API credential information
         """
         self.credentials: dict[str, str] = credentials
         self.client: Zenpy = Zenpy(**self.credentials)
 
-    def connect_db(self, db_info_file='./auth/sql') -> db.Connection:
+    def connect_db(self, db_credentials: str) -> db.Connection:
         """Connects to SQL database using pyodbc.
 
         See https://github.com/mkleehammer/pyodbc/wiki/Getting-started
 
-        File sample:
+        Credentials string sample:
 
         ```
         Driver={SQL Server};
@@ -117,26 +183,45 @@ class Zendesk:
         Trusted_Connection=no;
         ```
 
-        :param str db_info_file: text file with SQL database connection information, defaults to './auth/sql'
+        :param str db_credentials: string with SQL database connection information
         :return db.Connection: `pyodbc` connection to the SQL database
         """
-        with open(db_info_file) as dbf:
-            db_info: str = dbf.read().replace('\n', '')
-        self.db_file = db_info_file
-        self.db = db.connect(db_info)
+        self.db_credentials = db_credentials
+        self.db = db.connect(self.db_credentials)
         return self.db
 
     def sql_update_str(self, type_list: list[dict[str, any]], id: str) -> str:
+        """Creates SQL query to update row with `id` using values from the `Zendesk.type_list` function
+
+        :param list[dict[str, any]] type_list: output from type_list function
+        :param str id: row ID
+        :return str: SQL query
+        """
         parsed_values: dict[str, str] = dict(map(Zendesk.parse_value, type_list))
         return f"update {self.table} set {', '.join([f'[{c}]={v}' for c, v in parsed_values.items()])} where id={id if type(id)==int else f"'{id}'"}"
 
     def sql_insertion_str(self, columns: str, values: str) -> str:
+        """Inserts new row into table.
+
+        :param str columns: columns with new values
+        :param str values: values for the columns
+        :return str: SQL query
+        """
         return f'insert into {self.table} ({columns}) values ({values})'
 
     def has_table(self, table: str) -> bool:
+        """Returns `True` if the connected database contains the given table.
+
+        :param str table: name of the table to check for
+        :return bool: True if table exists
+        """
         return bool(self.db.cursor().tables(table=table, tableType='TABLE').fetchone())
 
     def add_columns(self, type_list: list[dict[str, str]]):
+        """Adds columns to the table `self.table` using the given `type_list`.
+
+        :param list[dict[str, str]] type_list: output from the `Zendesk.type_list` function
+        """
         for t in type_list:
             col_name, col_type = t['column'], t['type']
             if not self.has_column(col_name):
@@ -324,7 +409,10 @@ class Zendesk:
     def cache_table_columns(self):
         """Caches table columns from SQL database
         """
-        self.table_columns = { cn[0] for cn in self.execute(f"select column_name from information_schema.columns where TABLE_NAME='{self.table}'").fetchall() }
+        select_columns_query = f"select column_name from information_schema.columns where TABLE_NAME='{self.table}'"
+        self.table_columns = {
+            cn[0] for cn in self.execute(select_columns_query).fetchall()
+        }
     
     def get_table_columns(self):
         if not len(self.table_columns):
