@@ -51,7 +51,7 @@ class ZenTicket(Zendesk):
         ticket_table = ticket_table if ticket_table is not None else self.ticket_to_table(self.get_sample_ticket())
         return { name: (str(t) if 'custom_fields.' not in name else self.ticket_fields[name.split('.')[1]].type) for name, t in ticket_table.dtypes.to_dict().items()}
 
-    def ticket_field_types(self, ticket_table: pd.DataFrame|None = None, mapping_json='./ref/type_mapping.json', varchar_buffer=5) -> dict[str, str]:
+    def ticket_field_types(self, ticket_table: pd.DataFrame|None = None, varchar_buffer=5) -> dict[str, str]:
         """Uses data mapping `JSON` to map ticket types to SQL types.
 
         Expects 3 keys: `"direct"`, `"except"`, `"date_fields"`.
@@ -73,14 +73,9 @@ class ZenTicket(Zendesk):
         ```
 
         :param pd.DataFrame | None ticket_table: dataframe created from ticket, defaults to None
-        :param str mapping_json: `JSON` file with dtype mapping, defaults to './ref/type_mapping.json'
         :param int varchar_buffer: buffer multiplier for max size string to be used as `varchar(max * varchar_buffer)`, defaults to 3
         :return dict[str, str]: dictionary with mapped types.
         """
-        if self.mapping_dict is None:
-            with open(mapping_json) as cred_file:
-                self.mapping_dict: dict = json.load(cred_file)
-        
         raw_types = self.raw_ticket_field_types(ticket_table)
         direct_map: dict = self.mapping_dict['direct']
         date_map: dict = self.mapping_dict['date_fields']
