@@ -324,11 +324,14 @@ class Zendesk:
             custom_fields[self.client.ticket_fields(id=f['id']).title] = f['value']
         return custom_fields
 
-    def append_obj(self, obj_dict: dict, recache=True, force=False, create_column=True) -> bool:
-        """Appends generic dictionary to table
+    def append_obj(self, obj_dict: dict, recache=True, force=False) -> bool:
+        """Appends generic dictionary to table.
+
+        If `force` is set to `True`, object will be updated if its ID already exists in the table.
 
         :param dict obj_dict: dictionary to be appended
         :param bool recache: whether to recache table ids, defaults to True
+        :param bool force: force append object, defaults to False
         :return bool: if append was successful
         """
         id=obj_dict['id']
