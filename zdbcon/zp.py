@@ -447,3 +447,15 @@ class Zendesk:
     def add_column(self, col_name: str, col_type: str):
         self.execute(f'alter table [{self.table}] add [{col_name}] {col_type} NULL')
         self.db.commit()
+
+    DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+    def get_tickets(self, updated_at_after: str):
+        return self.client.search(
+            type='ticket',
+            updated_at_after=datetime.strptime(
+                    updated_at_after,
+                    Zendesk.DATE_FORMAT
+                ).astimezone(tz.tzutc()),
+            sort_by='updated_at',
+            sort_order='asc'
+        )
