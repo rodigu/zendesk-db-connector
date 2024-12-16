@@ -462,3 +462,6 @@ class Zendesk:
             sort_by='updated_at',
             sort_order='asc'
         )
+
+    def get_ticket(self, id: int) -> Ticket:
+        return self.client.tickets(id=id)
