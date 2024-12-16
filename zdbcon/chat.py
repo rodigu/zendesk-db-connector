@@ -21,11 +21,11 @@ class ZenChat(ZenAudit):
             {
                 "ticket_id": ticket_id,
                 "id": f"{event['id']}-{idx}",
-                "content": h,
+                "content": history,
                 "chat_id": event['id']
             }
-            for idx, h in enumerate(event['value']['history'])
-                if h['type'] == "ChatMessage"
+            for idx, history in enumerate(event['value']['history'])
+                if history['type'] == "ChatMessage"
         ]
 
     def get_chat_history(self, ticket_id: int) -> GeneratorExit:
@@ -35,10 +35,10 @@ class ZenChat(ZenAudit):
         :yield GeneratorExit[list[dict]]: yields a formatted chat history using `ZenChat.format_chat_history`
         """
         return (
-            h for audit in self.client.tickets.audits(ticket=ticket_id)
+            history for audit in self.client.tickets.audits(ticket=ticket_id)
             for event in audit.events
                 if event['type'] == 'ChatStartedEvent'
-            for h in self.format_chat_history(event, ticket_id)
+            for history in self.format_chat_history(event, ticket_id)
         )
 
     def append_ticket_chat(self, ticket_id: int):
@@ -47,5 +47,5 @@ class ZenChat(ZenAudit):
         :param int ticket_id:
         """
         self.vp("Appending Ticket Chat")
-        for h in self.get_chat_history(ticket_id):
-            self.append_obj(h, recache=False, force=False)
+        for history in self.get_chat_history(ticket_id):
+            self.append_obj(history, recache=False, force=False)
