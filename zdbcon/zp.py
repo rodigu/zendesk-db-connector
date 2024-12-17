@@ -453,12 +453,19 @@ class Zendesk:
 
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     def get_tickets(self, updated_at_after: str):
+        """Retrieves tickets with `updated_at` after `updated_at_after` date string.
+
+        Does _not_ include tickets created exactly _at_ `updated_at_after`.
+
+        :param str updated_at_after: date string in the format
+        :return Generator: zenpy client search generator
+        """
         return self.client.search(
             type='ticket',
             updated_at_after=datetime.strptime(
                     updated_at_after,
                     Zendesk.DATE_FORMAT
-                ).astimezone(tz.tzutc()) - timedelta(seconds=.1),
+                ).astimezone(tz.tzutc()),
             sort_by='updated_at',
             sort_order='asc'
         )
