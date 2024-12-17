@@ -4,7 +4,7 @@ from dateutil import parser as date_parser
 from dateutil import tz
 from zenpy import Zenpy
 from zenpy.lib.api_objects import Ticket
-from datetime import datetime
+from datetime import datetime, timedelta
 from icecream import ic
 
 class Zendesk:
@@ -458,7 +458,7 @@ class Zendesk:
             updated_at_after=datetime.strptime(
                     updated_at_after,
                     Zendesk.DATE_FORMAT
-                ).astimezone(tz.tzutc()),
+                ).astimezone(tz.tzutc()) - timedelta(seconds=.1),
             sort_by='updated_at',
             sort_order='asc'
         )
