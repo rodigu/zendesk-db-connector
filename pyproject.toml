@@ -1,6 +1,6 @@
 [project]
 name = "zdbcon"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
   "pyodbc",
   "pandas",

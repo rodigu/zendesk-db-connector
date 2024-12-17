@@ -457,7 +457,7 @@ class Zendesk:
 
         Does _not_ include tickets created exactly _at_ `updated_at_after`.
 
-        :param str updated_at_after: date string in the format
+        :param str updated_at_after: date string in the format `"%Y-%m-%d %H:%M:%S"`
         :return Generator: zenpy client search generator
         """
         return self.client.search(
@@ -469,6 +469,14 @@ class Zendesk:
             sort_by='updated_at',
             sort_order='asc'
         )
+
+    def single_ticket_fetch(self, updated_at_after: str) -> Ticket:
+        """Returns first ticket with `updated_at` date after given `updated_at_after` date.
+
+        :param str updated_at_after: reference date in the format `"%Y-%m-%d %H:%M:%S"`
+        :return Ticket: first ticket to be updated after `udpated_at_after` date
+        """
+        return self.get_tickets(updated_at_after=updated_at_after).next()
 
     def get_ticket(self, id: int) -> Ticket:
         return self.client.tickets(id=id)
