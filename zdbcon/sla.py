@@ -12,21 +12,27 @@ class ZenSLA(ZenAudit):
         self.table = "SLAAudit"
 
     @staticmethod
-    def format_event(event: dict, audit: Audit, ticket_id: int) -> dict:
+    def format_event(event: dict, audit: Audit | dict, ticket_id: int) -> dict:
         """Formats `event` from the `audit` for `ticket_id` into a dictionary
 
         :param dict event:
-        :param Audit audit:
+        :param Audit|dict audit:
         :param int ticket_id:
         :return dict:
         """
+        if type(audit) == dict:
+            audit_id = audit['id']
+            audit_creation = audit['created_at']
+        else:
+            audit_id = audit.id
+            audit_creation = audit.created_at
         return {
             **dict(x for x in event.items() if x[0]!='previous_value'),
-            'id': f"{audit.id}-{event['id']}",
+            'id': f"{audit_id}-{event['id']}",
             'event_id': event['id'],
-            'audit_id': audit.id,
+            'audit_id': audit_id,
             'ticket_id': ticket_id,
-            'changed_at': audit.created_at
+            'changed_at': audit_creation
         }
 
     @staticmethod
