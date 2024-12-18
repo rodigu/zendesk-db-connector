@@ -59,6 +59,6 @@ class ZenChat(ZenAudit):
             for history in self.format_chat_history(event, ticket_id)
         )
 
-    def append_ticket_chat(self, ticket_id: int, audits: list[dict]):
+    def append_ticket_chat_from(self, ticket_id: int, audits: list[dict]):
         for history in self.get_chat_history_from(ticket_id, audits):
             self.append_obj(history, recache=False, force=False)
