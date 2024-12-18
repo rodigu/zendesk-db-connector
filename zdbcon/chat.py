@@ -1,12 +1,13 @@
 from zdbcon.audit import ZenAudit
 
 class ZenChat(ZenAudit):
-    def __init__(self, credentials: dict[str, str]):
+    def __init__(self, credentials: dict[str, str], type_mapping: dict[str, dict[str, str]]):
         """Zendesk integration for chat logs
 
         :param dict[str, str] credentials: Zendesk API credentials dictionary
+        :param dict[str, dict[str, str]] type_mapping: type mapping, passed to parent class
         """
-        super().__init__(credentials=credentials)
+        super().__init__(credentials=credentials, type_mapping=type_mapping)
         self.table = "ChatLogs"
 
     @staticmethod

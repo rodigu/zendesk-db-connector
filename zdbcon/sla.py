@@ -2,12 +2,13 @@ from zdbcon.audit import ZenAudit
 from zenpy.lib.api_objects import Audit
 
 class ZenSLA(ZenAudit):
-    def __init__(self, credentials: dict[str, str]):
+    def __init__(self, credentials: dict[str, str], type_mapping: dict[str, dict[str, str]]):
         """Zendesk SLA integration
 
         :param str credentials: Zendesk API credentials dictionary
+        :param dict[str, dict[str, str]] type_mapping: type mapping dictionary to be passed to parent class
         """
-        super().__init__(credentials=credentials)
+        super().__init__(credentials=credentials, type_mapping=type_mapping)
         self.table = "SLAAudit"
 
     @staticmethod
