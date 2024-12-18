@@ -465,7 +465,7 @@ class Zendesk:
             updated_at_after=datetime.strptime(
                     updated_at_after,
                     Zendesk.DATE_FORMAT
-                ).astimezone(tz.tzutc()),
+                ),
             sort_by='updated_at',
             sort_order='asc'
         )
