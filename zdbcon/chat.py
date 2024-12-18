@@ -54,7 +54,7 @@ class ZenChat(ZenAudit):
     def get_chat_history_from(self, ticket_id: int, audits: list[dict]):
         return (
             history for audit in audits
-            for event in audit.events
+            for event in audit['events']
                 if event['type'] == 'ChatStartedEvent'
             for history in self.format_chat_history(event, ticket_id)
         )
