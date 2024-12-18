@@ -54,3 +54,10 @@ class ZenSLA(ZenAudit):
         self.vp(">\tAppending SLA Changes")
         for h in self.get_sla_changes(ticket_id):
             self.append_obj(h, recache=False, force=force)
+
+    def extract_sla_changes_from(self, ticket_id: int, audits: list[dict]):
+        return (self.format_event(event, audit, ticket_id) for audit in audits for event in audit.events if ZenSLA.is_sla_change(event))
+
+    def append_sla_changes_from(self, ticket_id: int, audits: list[dict], force=False):
+        for history in self.extract_sla_changes_from(ticket_id=ticket_id, audits=audits):
+            self.append_obj(history, recache=False, force=force)
