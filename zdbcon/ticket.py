@@ -99,7 +99,7 @@ class ZenTicket(Zendesk):
         
         return raw_types
 
-    def append_ticket(self, ticket: Ticket, force_update=False) -> bool:
+    def append_ticket(self, ticket: Ticket|dict, force_update=False) -> bool:
         """Appends given ticket to Ticket table. Returns `True` if append was successful.
         
         Tickets that are closed and have already been inserted are ignored.
@@ -108,12 +108,18 @@ class ZenTicket(Zendesk):
 
         Tickets that are not closed are updated.
 
-        :param Ticket ticket: 
+        :param Ticket|dict ticket: Ticket instance or ticket dictionary from `Ticket().to_dict()`
         :param bool force_update: forces ticket update even if ticket is closed and already in table
         :return bool: 
         """
+        if type(ticket) == dict:
+            ticket_status = ticket['status']
+            ticket_id = ticket['id']
+        else:
+            ticket_status = ticket.status
+            ticket_id = ticket.id
         table_ids = self.get_table_ids(recache=False)
-        if ticket.status == 'closed' and (ticket.id in table_ids):
+        if ticket_status == 'closed' and (ticket_id in table_ids):
             self.vp("Ticket is closed and already in table.")
             if not force_update:
                 return False
@@ -137,16 +143,15 @@ class ZenTicket(Zendesk):
                 self.add_column(col_name, col_type)
                 self.cache_table_columns()
 
-        if ticket.id in table_ids:
-            self.vp(f'Updating {ticket.status} ticket.')
-            self.execute(f"update {self.table} set {', '.join([f'[{c}]={v}' for c, v in parsed_values.items()])} where id={ticket.id}")
+        if ticket_id in table_ids:
+            self.vp(f'Updating {ticket_status} ticket.')
+            self.execute(f"update {self.table} set {', '.join([f'[{c}]={v}' for c, v in parsed_values.items()])} where id={ticket_id}")
         else:
             self.vp('Inserting ticket.')
             self.execute(self.sql_insertion_str(columns=columns, values=values))
         
         self.commit()
 
-        self.id_cache.add(ticket.id)
+        self.id_cache.add(ticket_id)
 
         return True
-
