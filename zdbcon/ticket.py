@@ -11,8 +11,8 @@ class ZenTicket(Zendesk):
         super().__init__('Tickets', credentials=credentials, type_mapping=mapping_dict)
         self.ticket_fields = { str(f.id): f for f in self.client.ticket_fields() }
 
-    def ticket_dict(self, ticket: Ticket) -> dict:
-        d: dict = ticket.to_dict()
+    def ticket_dict(self, ticket: Ticket | dict) -> dict:
+        d: dict = ticket if type(ticket) == dict else ticket.to_dict()
         d.pop('metric_events', None)
         return d
 
@@ -22,9 +22,9 @@ class ZenTicket(Zendesk):
         :param Ticket|dict ticket: ticket instance or dictionary
         :return pd.DataFrame: pandas dataframe
         """
-        td: dict = ticket if type(ticket) == dict else self.ticket_dict(ticket)
+        td: dict = self.ticket_dict(ticket)
         for f in ['custom_fields', 'fields']:
-            td.update({f: Zendesk._normalized_fields(ticket.to_dict()[f])})
+            td.update({f: Zendesk._normalized_fields(td[f])})
         return pd.json_normalize(td)
     
     def get_sample_ticket(self) -> Ticket:
