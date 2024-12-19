@@ -16,13 +16,13 @@ class ZenTicket(Zendesk):
         d.pop('metric_events', None)
         return d
 
-    def ticket_to_table(self, ticket: Ticket) -> pd.DataFrame:
+    def ticket_to_table(self, ticket: Ticket | dict) -> pd.DataFrame:
         """Converts ticket instance to pandas dataframe.
 
-        :param Ticket ticket: ticket instance
+        :param Ticket|dict ticket: ticket instance or dictionary
         :return pd.DataFrame: pandas dataframe
         """
-        td: dict = self.ticket_dict(ticket)
+        td: dict = ticket if type(ticket) == dict else self.ticket_dict(ticket)
         for f in ['custom_fields', 'fields']:
             td.update({f: Zendesk._normalized_fields(ticket.to_dict()[f])})
         return pd.json_normalize(td)
