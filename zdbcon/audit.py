@@ -58,8 +58,9 @@ class ZenAudit(Zendesk):
             return except_map[column]
         return pd_type
 
-    def field_events(self, ticket_id: int, field_name: str | int):
+    def field_events(self, ticket_id: int, field_name: str | int, audit_iter: list=None):
         keys = {'field_name'}
+        audits = audit_iter or self.get_ticket_audits(ticket_id)
         return (
             {
                 'ticket_id': ticket_id,
@@ -69,7 +70,7 @@ class ZenAudit(Zendesk):
                 'audit_id': audit.id,
                 'event_id': event['id']
             }
-            for audit in self.get_ticket_audits(ticket_id)
+            for audit in audits
                 for event in audit.events
                     if (event['type'] == 'Change' or event['type'] == 'Create')
                     and event['field_name'] == field_name
