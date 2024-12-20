@@ -480,3 +480,6 @@ class Zendesk:
 
     def get_ticket(self, id: int) -> Ticket:
         return self.client.tickets(id=id)
+
+    def get_deleted_tickets(self):
+        return self.client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
