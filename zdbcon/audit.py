@@ -58,6 +58,9 @@ class ZenAudit(Zendesk):
             return except_map[column]
         return pd_type
 
+    def get_field_name(self, field_id: str):
+        return self.client.ticket_fields(id=field_id).title
+
     def field_events(self, ticket_id: int, field_name: str | int, audits: list[dict]):
         keys = {'field_name'}
         return (
