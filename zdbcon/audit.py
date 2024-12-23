@@ -82,7 +82,7 @@ class ZenAudit(Zendesk):
             for audit in audits_gen()
                 for event in audit['events']
                     if (event['type'] == 'Change' or event['type'] == 'Create')
-                    and event['field_name'] == field_name
+                    and event['field_name'] == str(field_name)
         )
 
     def status_change_events(self, ticket_id: int, audits: list[dict] | Generator[Audit, None, None]) -> dict[str, any]:
