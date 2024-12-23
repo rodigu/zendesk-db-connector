@@ -1,3 +1,4 @@
+from typing import Generator
 from zdbcon.zp import Zendesk
 import pandas as pd
 from zenpy.lib.response import GenericCursorResultsGenerator
@@ -58,10 +59,16 @@ class ZenAudit(Zendesk):
             return except_map[column]
         return pd_type
 
-    def get_field_name(self, field_id: str):
+    def get_field_name(self, field_id: str) -> str:
         return self.client.ticket_fields(id=field_id).title
 
-    def field_events(self, ticket_id: int, field_name: str | int, audits: list[dict]):
+    def field_events(self, ticket_id: int, field_name: str | int, audits: list[dict] | Generator[Audit, None, None]):
+        def audits_gen():
+            for a in audits:
+                if type(a) != dict:
+                    yield a.to_dict()
+                else:
+                    yield a
         keys = {'field_name'}
         return (
             {
@@ -72,27 +79,29 @@ class ZenAudit(Zendesk):
                 'audit_id': audit['id'],
                 'event_id': event['id']
             }
-            for audit in audits
+            for audit in audits_gen()
                 for event in audit['events']
                     if (event['type'] == 'Change' or event['type'] == 'Create')
                     and event['field_name'] == field_name
         )
 
-    def status_change_events(self, ticket_id: int) -> dict[str, any]:
+    def status_change_events(self, ticket_id: int, audits: list[dict] | Generator[Audit, None, None]) -> dict[str, any]:
         """Status changes events dicts for the given ticket id
 
         :param int ticket_id:
+        :param list[dict] audits:
         :return dict: status change events dictionary
         """
-        return self.field_events(ticket_id, 'status')
+        return self.field_events(ticket_id, 'status', audits=audits)
 
-    def commercial_status_change_events(self, ticket_id: int) -> dict[str, any]:
+    def commercial_status_change_events(self, ticket_id: int, audits: list[dict] | Generator[Audit, None, None]) -> dict[str, any]:
         """Commercial status changes events dicts for the given ticket id
 
         :param int ticket_id:
+        :param list[dict] audits:
         :return dict: commercial status change events dictionary
         """
-        return self.field_events(ticket_id, 26870412763796)
+        return self.field_events(ticket_id, 26870412763796, audits=audits)
 
     def audit_type_list(self, audit: Audit) -> list[dict[str, str]]:
         """Type list for given audit
