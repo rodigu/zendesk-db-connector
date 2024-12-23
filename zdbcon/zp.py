@@ -280,9 +280,7 @@ class Zendesk:
         self.vp('> Executing SQL query')
 
         if tries==0:
-            self.vp(">   Couldn't execute query:")
-            self.vp(sql_query)
-            return
+            return self.db.execute(sql_query)
 
         try:
             r = self.db.execute(sql_query)
