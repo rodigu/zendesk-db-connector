@@ -335,7 +335,7 @@ class Zendesk:
         id=obj_dict['id']
         type_list = self.type_list(obj_dict)
         if id in self.get_table_ids(recache=recache, type_list=type_list):
-            self.vp(f"{obj_dict['id']} already in table")
+            self.vp(f"{obj_dict['id']} already in {self.table}")
             if not force:
                 return False
             self.vp("Appending object anyway")
