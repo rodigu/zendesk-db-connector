@@ -245,7 +245,7 @@ class Zendesk:
 
         :param str txt: text to be passed onto `ic`
         """
-        if self.VERBOSE: ic(txt, flush=True)
+        if self.VERBOSE: ic(txt)
 
     def commit(self, tries=10):
         """Wrapper for pyodbc `Connection.commit`
