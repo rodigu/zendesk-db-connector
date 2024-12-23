@@ -335,13 +335,12 @@ class Zendesk:
         :return bool: if append was successful
         """
         id=obj_dict['id']
-        if id in self.get_table_ids(recache):
+        type_list = self.type_list(obj_dict)
+        if id in self.get_table_ids(recache=recache, type_list=type_list):
             self.vp(f"{obj_dict['id']} already in table")
             if not force:
                 return False
             self.vp("Appending object anyway")
-
-        type_list = self.type_list(obj_dict)
 
         self.add_columns(type_list)
 
@@ -390,15 +389,21 @@ class Zendesk:
     def end_db_connection(self):
         self.db.close()
     
-    def get_table_ids(self, recache=True) -> set[int]:
+    def get_table_ids(self, recache=True, type_list: list[dict]=[]) -> set[int]:
         """Retrieves ID column from given table.
 
         :param bool recache: if True, table IDs weill be recached through a call to the SQL table.
+        :param bool type_list: type list from sample dict, used if table does not exist.
         :return set: set with IDs
         """
         if recache or self.id_cache is None:
-            ids = self.execute(f'select [id] from [{self.table}]')
-            self.id_cache = set(i[0] for i in ([] if ids is None else ids.fetchall()))
+            try:
+                ids = self.execute(f'select [id] from [{self.table}]')
+                self.id_cache = set(i[0] for i in ([] if ids is None else ids.fetchall()))
+            except db.Error as ex:
+                error_code = ex.args[0]
+                if error_code == '42S02':
+                    self.create_table(type_list=type_list)
         return self.id_cache
 
     def sql_columns_and_values(self, type_list: list[dict[str, str]]) -> tuple[str, str]:
