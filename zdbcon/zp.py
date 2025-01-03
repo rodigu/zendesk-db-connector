@@ -487,7 +487,7 @@ class Zendesk:
     def get_deleted_tickets(self):
         return self.client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
 
-    def select_tickets_open_for_over(self, days=30):
+    def select_tickets_open_for_over(self, days=30) -> pd.DataFrame:
         return pd.read_sql_query(
             f"SELECT id FROM ZENDESK.DBO.Tickets WHERE DATEDIFF(DD, created_at, GETDATE()) > {days} AND [status]!='closed'",
             self.db
