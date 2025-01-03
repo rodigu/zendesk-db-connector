@@ -277,7 +277,7 @@ class Zendesk:
         :param bool is_first: used by the recursion algorithm to determine first run, defaults to True
         :return list|None: same return as `Connection.execute`
         """
-        self.vp('> Executing SQL query')
+        self.vp(f'> Executing SQL query to {self.table}')
 
         if tries==0:
             return self.db.execute(sql_query)
@@ -285,15 +285,15 @@ class Zendesk:
         try:
             r = self.db.execute(sql_query)
             if not is_first:
-                self.vp(">   Execute successful")
+                self.vp(f">   Execute successful to {self.table}")
             return r
         except db.Error as pe:
             self.vp(f">   Error: {pe}")
             try:
-                self.vp(f'>   Retrying execute ({tries} attempts left)')
+                self.vp(f'>   Retrying execute to {self.table} ({tries} attempts left)')
                 return self.execute(sql_query, tries - 1, False)
             except:
-                self.vp(">   Couldn't execute")
+                self.vp(f">   Couldn't execute to {self.table}")
                 return
 
     def map_type(self, column: str, pd_type: str) -> str:
