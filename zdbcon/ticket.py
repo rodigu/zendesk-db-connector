@@ -11,6 +11,9 @@ class ZenTicket(Zendesk):
         super().__init__('Tickets', credentials=credentials, type_mapping=mapping_dict)
         self.ticket_fields = { str(f.id): f for f in self.client.ticket_fields() }
 
+    def recache_ticket_fields(self):
+        self.ticket_fields = { str(f.id): f for f in self.client.ticket_fields() }
+
     def ticket_dict(self, ticket: Ticket | dict) -> dict:
         d: dict = ticket if type(ticket) == dict else ticket.to_dict()
         d.pop('metric_events', None)
