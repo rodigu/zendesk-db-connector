@@ -14,7 +14,7 @@ class Zendesk:
         "bool": "bit",
     }
 
-    def __init__(self, table: str, credentials: dict[str, str], type_mapping: dict[str, dict[str,str]]={}):
+    def __init__(self, table: str, credentials: dict[str, str], type_mapping: dict[str, dict[str,str]]={}, logger=ic):
         """Zenpy wrapper that connects the API to a pyodbc SQL Database
 
         Example `credentials` for Zendesk:
@@ -66,9 +66,10 @@ class Zendesk:
         }
         ```
 
-        :param str table: _description_
-        :param dict[str, str] credentials: _description_
-        :param dict[str, dict[str,str]] type_mapping: _description_, defaults to {}
+        :param str table: table name
+        :param dict[str, str] credentials: Zendesk API credentials
+        :param dict[str, dict[str,str]] type_mapping: type mapping dictionary, defaults to {}
+        :param Callable logger: logging function, defaults to `ic`
         """
         self.connect_zendesk(credentials)
         self.mapping_dict: dict = type_mapping
@@ -77,6 +78,7 @@ class Zendesk:
         self.table_columns: set[str] = set()
         self.VERBOSE = False
         self.id_cache = None
+        self.logger = logger
 
     def reconnect(self):
         """Attempts to reconnect to the database and to Zendesk
@@ -243,9 +245,9 @@ class Zendesk:
         """Verbose print.
         Only prints if `self.VERBOSE` is `True`
 
-        :param str txt: text to be passed onto `ic`
+        :param str txt: text to be passed onto `logger`, (`ic` by default)
         """
-        if self.VERBOSE: ic(txt)
+        if self.VERBOSE: self.logger(txt)
 
     def commit(self, tries=10):
         """Wrapper for pyodbc `Connection.commit`
