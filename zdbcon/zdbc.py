@@ -32,10 +32,19 @@ class ZDBC:
     def fetch_ticket_audits(self, ticket: Ticket) -> Generator[Audit, None, None]:
         pass
 
+    def fetch_deleted_tickets(self) -> Generator[Ticket, None, None]:
+        """Fetches the last deleted tickets from the API. They are returned in `deleted_at` ascending erder.
+
+        :return None: returns the ZenPy deleted tickets generator
+        :yield Generator[Ticket, None, None]: deleted tickets generator
+        """
+        return self.client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
+
     @staticmethod
     def dict_from_ticket(ticket: Ticket) -> dict:
         pass
 
+    @staticmethod
     def dict_from_audit(audit: Audit) -> dict:
         pass
 
