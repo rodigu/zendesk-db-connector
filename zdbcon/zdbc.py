@@ -14,6 +14,8 @@ class ZDBC:
         self.connect_zendesk()
 
     def connect_zendesk(self):
+        """Creates an API client with ZenPy using the credentials given at `__init__`.
+        """
         self.zendesk_client: Zenpy = Zenpy(
             subdomain=self._credentials.subdomain,
             email=self._credentials.email,
@@ -42,16 +44,37 @@ class ZDBC:
 
     @staticmethod
     def dict_from_ticket(ticket: Ticket) -> dict:
+        """Parses given `ZenPy` `Ticket` instance into a python dictionary
+
+        :param Ticket ticket: ticket instance
+        :return dict: dictionary with ticket data
+        """
         pass
 
     @staticmethod
     def dict_from_audit(audit: Audit) -> dict:
+        """Parses `Audit` instance into Python dictionary
+
+        :param Audit audit: ticket audit
+        :return dict: dictionary
+        """
         pass
 
     @staticmethod
     def extract_audit_field_events(audit: Audit, field_name: str) -> Generator[dict, None, None]:
+        """Extracts events with given `field_name`
+
+        :param Audit audit: ZenPy Audit instance
+        :param str field_name: name of the field to be extracted and parsed into a dictionary
+        :yield Generator[dict, None, None]: dictionary with a field event
+        """
         pass
 
     @staticmethod
     def extract_audit_chat_history(audit: Audit) -> Generator[dict, None, None]:
+        """Extracts ticket chat history from given `Audit`
+
+        :param Audit audit: `ZenPy` `Audit` instance
+        :yield Generator[dict, None, None]: dictionary with a chat event
+        """
         pass
