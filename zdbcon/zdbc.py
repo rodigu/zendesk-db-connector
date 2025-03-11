@@ -46,6 +46,9 @@ class ZDBC:
     def dict_from_ticket(ticket: Ticket) -> dict:
         """Parses given `ZenPy` `Ticket` instance into a python dictionary
 
+        - normalizes `custom_fields`
+        - converts dates from `UTC` to `GMT-3`
+
         :param Ticket ticket: ticket instance
         :return dict: dictionary with ticket data
         """
