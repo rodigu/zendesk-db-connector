@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Generator
 from dateutil import tz
 
+from zenpy.lib.response import GenericCursorResultsGenerator
 from zenpy import Zenpy
 from zenpy.lib.api_objects import Ticket, Audit
 from zdbcon.credentials import Credentials
@@ -21,6 +22,14 @@ class ZDBC:
             email=self._credentials.email,
             token=self._credentials.token
         )
+
+    def get_ticket_audits(self, ticket_id: int) -> GenericCursorResultsGenerator[Audit]:
+        """Generator for ticket audits
+
+        :param int ticket_id: ticket id
+        :return GenericCursorResultsGenerator[Audit]: generator for ticket audits
+        """
+        return self.zendesk_client.tickets.audits(ticket=ticket_id)
 
     def fetch_last_updated_tickets(self, since_datetime: datetime, include: list[str]=['metric_sets']) -> Generator[Ticket, None, None]:
         """Fetches last updated tickets since `since_datetime`, sorted by `updated_at` in ascending order.
