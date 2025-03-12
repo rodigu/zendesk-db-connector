@@ -6,6 +6,10 @@ from dateutil import tz
 from zenpy.lib.response import GenericCursorResultsGenerator
 from zenpy import Zenpy
 from zenpy.lib.api_objects import Ticket, Audit
+from zenpy.lib.proxy import ProxyDict
+
+from flatten_dictionary import flatten_dict
+
 from zdbcon.credentials import Credentials
 
 
@@ -70,7 +74,11 @@ class ZDBC:
         :param Audit audit: ticket audit
         :return dict: dictionary
         """
-        pass
+        d:ProxyDict = audit.to_dict()
+        d.pop('events', None)
+        if 'decoration' in d['metadata']:
+            d['metadata']['decoration'].pop('links', None)
+        return flatten_dict(d, ['id', 'type'])
 
     @staticmethod
     def extract_audit_field_events(audit: Audit, field_name: str) -> Generator[dict, None, None]:
