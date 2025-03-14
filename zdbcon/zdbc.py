@@ -102,12 +102,38 @@ class ZDBC:
         )
 
     @staticmethod
-    def extract_audit_chat_history(audit: Audit) -> Generator[dict, None, None]:
+    def extract_audit_chat_history(ticket_id: int, audits: list[Audit]) -> Generator[dict, None, None]:
         """Extracts ticket chat history from given `Audit`
 
-        :param Audit audit: `ZenPy` `Audit` instance
+        :param int ticket_id: ID of the ticket that originates the audits
+        :param list[Audit] audit: `ZenPy` `Audit` instance list
         :yield Generator[dict, None, None]: dictionary with a chat event
         """
+        return (
+            history for audit in audits
+            for event in audit.events
+                if event['type'] == 'ChatStartedEvent'
+            for history in ZDBC.format_chat_history(event, ticket_id)
+        )
+
+    @staticmethod
+    def extract_chat_history_from_event(ticket_id: int, event: dict) -> Generator[dict, None, None]:
+        """Extracts chat history from given event
+
+        :param int ticket_id: ID of tikcet that originates the event
+        :param dict event: event from `audit.events`
+        :yield Generator[dict, None, None]: generator for chat dictionaries
+        """
+        return (
+            {
+                "ticket_id": ticket_id,
+                "id": f"{event['id']}-{idx}",
+                "content": history,
+                "chat_id": event['id']
+            }
+            for idx, history in enumerate(event['value']['history'])
+                if history['type'] == "ChatMessage"
+        )
 
     @staticmethod
     def extract_sla_history(ticket_id: int, audits: list[Audit]) -> Generator[dict, None, None]:
