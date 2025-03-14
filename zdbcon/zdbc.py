@@ -108,4 +108,49 @@ class ZDBC:
         :param Audit audit: `ZenPy` `Audit` instance
         :yield Generator[dict, None, None]: dictionary with a chat event
         """
-        pass
+
+    @staticmethod
+    def extract_sla_history(ticket_id: int, audits: list[Audit]) -> Generator[dict, None, None]:
+        """Extracts SLA history from givent Audits list
+
+        :param int ticket_id: ID of the ticket that originates the audits
+        :param list[Audit] audits: list of audits from ticket with `ticket_id`
+        :yield Generator[dict, None, None]: dictionary with SLA events
+        """
+        return (
+            ZDBC.format_event(ticket_id=ticket_id, event=event, audit=audit)
+            for audit in audits
+                for event in audit.events
+                    if ZDBC.is_sla_change(event)
+        )
+
+    @staticmethod
+    def is_sla_change(event: dict) -> bool:
+        """Checks if given event is an SLA change
+
+        :param dict event: event dictionary from `audit.events`
+        :return bool: True if event is an SLA change
+        """
+        return (
+            (event['type'] == 'Change')
+            and ('via' in event)
+            and (event['via']['source']['rel'] == 'sla_target_change')
+        )
+
+    @staticmethod
+    def format_event(ticket_id: int, audit: Audit, event: dict) -> dict:
+        """Formats `event` from the `audit` for `ticket_id` into a dictionary
+
+        :param int ticket_id:
+        :param Audit audit:
+        :param dict event:
+        :return dict:
+        """
+        return {
+            **dict(x for x in event.items() if x[0]!='previous_value'),
+            'id': f"{audit.id}-{event['id']}",
+            'event_id': event['id'],
+            'audit_id': audit.id,
+            'ticket_id': ticket_id,
+            'changed_at': audit.created_at
+        }
