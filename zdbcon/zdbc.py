@@ -81,6 +81,34 @@ class ZDBC:
         return flatten_dict(d, ['id', 'type'])
 
     @staticmethod
+    def extract_field_from_audits(ticket_id: int, audits: list[Audit], field_name: str):
+        """Extract all events with givin field name form list of ticket audits
+
+        :param int ticket_id: ID of the ticket that originates the audits
+        :param list[Audit] audits: list of audits from ticket with `ticket_id`
+        :param str field_name: name of the field to be extracted
+        """
+        def audits_gen():
+            for a in audits:
+                yield a.to_dict()
+        keys = {'field_name'}
+        return (
+            {
+                'ticket_id': ticket_id,
+                'changed_at': audit['created_at'],
+                **{x: event[x] for x in event if x not in keys},
+                'id': f"{audit['id']}-{event['id']}",
+                'audit_id': audit['id'],
+                'event_id': event['id']
+            }
+            for audit in audits_gen()
+                for event in audit['events']
+                    if (event['type'] == 'Change' or event['type'] == 'Create')
+                    and event['field_name'] == str(field_name)
+        )
+
+
+    @staticmethod
     def extract_audit_field_events(audit: Audit, field_name: str) -> Generator[dict, None, None]:
         """Extracts events with given `field_name`
 
@@ -88,6 +116,7 @@ class ZDBC:
         :param str field_name: name of the field to be extracted and parsed into a dictionary
         :yield Generator[dict, None, None]: dictionary with a field event
         """
+
         pass
 
     @staticmethod
