@@ -85,21 +85,18 @@ class ZDBC:
         :param list[Audit] audits: list of audits from ticket with `ticket_id`
         :param str field_name: name of the field to be extracted
         """
-        def audits_gen():
-            for a in audits:
-                yield a.to_dict()
         keys = {'field_name'}
         return (
             {
                 'ticket_id': ticket_id,
-                'changed_at': audit['created_at'],
+                'changed_at': audit.created_at,
                 **{x: event[x] for x in event if x not in keys},
-                'id': f"{audit['id']}-{event['id']}",
-                'audit_id': audit['id'],
+                'id': f"{audit.id}-{event['id']}",
+                'audit_id': audit.id,
                 'event_id': event['id']
             }
-            for audit in audits_gen()
-                for event in audit['events']
+            for audit in audits
+                for event in audit.events
                     if (event['type'] == 'Change' or event['type'] == 'Create')
                     and event['field_name'] == str(field_name)
         )
