@@ -2,6 +2,8 @@ import pandas as pd
 from datetime import datetime
 from typing import Generator
 from dateutil import tz
+from dateutil import parser as date_parser
+from pytz import timezone
 
 from zenpy.lib.response import GenericCursorResultsGenerator
 from zenpy import Zenpy
@@ -53,7 +55,7 @@ class ZDBC:
         return self.zendesk_client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
 
     @staticmethod
-    def dict_from_ticket(ticket: Ticket) -> dict:
+    def dict_from_ticket(ticket: Ticket, date_fields: list[str]) -> dict:
         """Parses given `ZenPy` `Ticket` instance into a python dictionary
 
         - normalizes `custom_fields`
@@ -62,7 +64,34 @@ class ZDBC:
         :param Ticket ticket: ticket instance
         :return dict: dictionary with ticket data
         """
-        pass
+        td: dict = ticket if type(ticket) == dict else ticket.to_dict()
+        td.pop('metric_events', None)
+
+        for f in ['custom_fields', 'fields']:
+            td.update(
+                {
+                    f: {} if not td[f] else {
+                        f['id']:f['value'] for f in td[f]
+                    }
+                }
+            )
+        ticket_dataframe = pd.json_normalize(td)
+
+        for date_field in date_fields:
+            ticket_dataframe[date_field] = ticket_dataframe[date_field].map(ZDBC.utc_to_tz)
+
+        return ticket_dataframe.to_dict('records')[0]
+
+    @staticmethod
+    def utc_to_tz(utc_date: str, new_tz='America/Sao_Paulo') -> str:
+        """Converts `utc_date` (Zendesk API formatted) into the given timezone as a string
+        in the format: `'%Y-%m-%d %H:%M:%S'`
+
+        :param str utc_date: original Zendesk API
+        :param str new_tz: new timezone for conversion, defaults to 'America/Sao_Paulo'
+        :return str: string-formatted time (`'%Y-%m-%d %H:%M:%S'`)
+        """
+        return date_parser.parse(utc_date).astimezone(timezone(new_tz)).strftime('%Y-%m-%d %H:%M:%S')
 
     @staticmethod
     def dict_from_audit(audit: Audit) -> dict:
