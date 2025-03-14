@@ -41,11 +41,8 @@ class ZDBC:
         :param datetime since_datetime: datetime to use as starting point for API GET
         :yield Generator[Ticket, None, None]: ticket search generator
         """
-        for ticket in self.client.search(type='ticket', updated_at_after=since_datetime.astimezone(tz.tzutc()), sort_by='updated_at', sort_order='asc'):
-            yield self.client.tickets(id=ticket.id, include=include)
-
-    def fetch_ticket_audits(self, ticket: Ticket) -> Generator[Audit, None, None]:
-        pass
+        for ticket in self.zendesk_client.search(type='ticket', updated_at_after=since_datetime.astimezone(tz.tzutc()), sort_by='updated_at', sort_order='asc'):
+            yield self.zendesk_client.tickets(id=ticket.id, include=include)
 
     def fetch_deleted_tickets(self) -> Generator[Ticket, None, None]:
         """Fetches the last deleted tickets from the API. They are returned in `deleted_at` ascending erder.
@@ -53,7 +50,7 @@ class ZDBC:
         :return None: returns the ZenPy deleted tickets generator
         :yield Generator[Ticket, None, None]: deleted tickets generator
         """
-        return self.client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
+        return self.zendesk_client.tickets.deleted(sort_by='deleted_at', sort_order='asc')
 
     @staticmethod
     def dict_from_ticket(ticket: Ticket) -> dict:
