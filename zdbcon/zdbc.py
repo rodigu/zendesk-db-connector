@@ -78,7 +78,7 @@ class ZDBC:
         return flatten_dict(d, ['id', 'type'])
 
     @staticmethod
-    def extract_field_from_audits(ticket_id: int, audits: list[Audit], field_name: str):
+    def extract_field_events_from_audits(ticket_id: int, audits: list[Audit], field_name: str):
         """Extract all events with givin field name form list of ticket audits
 
         :param int ticket_id: ID of the ticket that originates the audits
@@ -103,18 +103,6 @@ class ZDBC:
                     if (event['type'] == 'Change' or event['type'] == 'Create')
                     and event['field_name'] == str(field_name)
         )
-
-
-    @staticmethod
-    def extract_audit_field_events(audit: Audit, field_name: str) -> Generator[dict, None, None]:
-        """Extracts events with given `field_name`
-
-        :param Audit audit: ZenPy Audit instance
-        :param str field_name: name of the field to be extracted and parsed into a dictionary
-        :yield Generator[dict, None, None]: dictionary with a field event
-        """
-
-        pass
 
     @staticmethod
     def extract_audit_chat_history(audit: Audit) -> Generator[dict, None, None]:
