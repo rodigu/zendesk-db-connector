@@ -27,7 +27,7 @@ class ZDBC:
             token=self._credentials.token
         )
 
-    def get_ticket_audits(self, ticket_id: int) -> GenericCursorResultsGenerator[Audit]:
+    def fetch_ticket_audits(self, ticket_id: int) -> GenericCursorResultsGenerator[Audit]:
         """Generator for ticket audits
 
         :param int ticket_id: ticket id
