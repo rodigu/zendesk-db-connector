@@ -443,12 +443,12 @@ class Zendesk:
         self.table_columns = {
             cn[0] for cn in self.execute(select_columns_query).fetchall()
         }
-    
+
     def get_table_columns(self):
         if not len(self.table_columns):
             self.cache_table_columns()
         return self.table_columns
-    
+
     def has_column(self, column_name: str):
         return column_name in self.get_table_columns()
 
